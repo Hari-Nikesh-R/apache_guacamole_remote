@@ -11,6 +11,7 @@ This guide will walk you through setting up Apache Guacamole using Docker Compos
 - [Accessing Guacamole](#accessing-guacamole)
 - [Default Credentials](#default-credentials)
 - [Adding Remote Connections](#adding-remote-connections)
+- [Managing the Docker Instance](#managing-the-docker-instance)
 - [Troubleshooting](#troubleshooting)
 - [Configuration Options](#configuration-options)
 
@@ -258,6 +259,128 @@ After logging in, you can add remote desktop connections:
    - **Username**: SSH username
    - **Private Key**: Paste your SSH private key (optional)
 4. Click **Save**
+
+## Managing the Docker Instance
+
+### Starting the Services
+
+To start all Guacamole services:
+
+```bash
+docker compose up -d
+```
+
+The `-d` flag runs containers in detached mode (in the background).
+
+### Stopping the Services
+
+To stop all running containers without removing them:
+
+```bash
+docker compose stop
+```
+
+This will stop all containers but preserve their state. You can restart them later with `docker compose start`.
+
+### Stopping and Removing Containers
+
+To stop and remove all containers (but keep volumes and data):
+
+```bash
+docker compose down
+```
+
+This stops and removes containers, networks, but **preserves volumes** (your database data will remain).
+
+### Completely Removing Everything (Including Data)
+
+⚠️ **Warning:** This will delete all data including the database!
+
+To stop containers, remove them, and delete all volumes (including database data):
+
+```bash
+docker compose down -v
+```
+
+Or to remove everything including images:
+
+```bash
+docker compose down -v --rmi all
+```
+
+### Restarting Services
+
+To restart all services:
+
+```bash
+docker compose restart
+```
+
+To restart a specific service:
+
+```bash
+docker compose restart guacamole
+docker compose restart guacd
+docker compose restart postgres
+```
+
+### Viewing Container Status
+
+To check which containers are running:
+
+```bash
+docker compose ps
+```
+
+To see detailed status of all services:
+
+```bash
+docker compose ps -a
+```
+
+### Viewing Logs
+
+To view logs from all services:
+
+```bash
+docker compose logs
+```
+
+To follow logs in real-time:
+
+```bash
+docker compose logs -f
+```
+
+To view logs from a specific service:
+
+```bash
+docker compose logs guacamole
+docker compose logs guacd
+docker compose logs postgres
+```
+
+To view the last N lines of logs:
+
+```bash
+docker compose logs --tail=50 guacamole
+```
+
+### Quick Reference Commands
+
+| Action | Command |
+|--------|---------|
+| Start services | `docker compose up -d` |
+| Stop services (keep containers) | `docker compose stop` |
+| Start stopped services | `docker compose start` |
+| Stop and remove containers | `docker compose down` |
+| Stop and remove everything (including data) | `docker compose down -v` |
+| Restart all services | `docker compose restart` |
+| Restart specific service | `docker compose restart <service-name>` |
+| View container status | `docker compose ps` |
+| View logs | `docker compose logs` |
+| Follow logs | `docker compose logs -f` |
+| View specific service logs | `docker compose logs <service-name>` |
 
 ## Troubleshooting
 
