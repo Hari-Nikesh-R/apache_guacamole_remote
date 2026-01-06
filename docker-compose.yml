@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: guacamole-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: guacamole_db
+      POSTGRES_USER: guacamole_user
+      POSTGRES_PASSWORD: guacamole_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - guacamole-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U guacamole_user -d guacamole_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  guacd:
+    image: guacamole/guacd:latest
+    container_name: guacamole-guacd
+    restart: unless-stopped
+    networks:
+      - guacamole-network
+    environment:
+      LOG_LEVEL: info
+
+  guacamole:
+    image: guacamole/guacamole:latest
+    container_name: guacamole-web
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      guacd:
+        condition: service_started
+    ports:
+      - "8443:8080"
+    environment:
+      # Guacd connection
+      GUACD_HOSTNAME: guacd
+      GUACD_PORT: 4822
+      
+      # PostgreSQL connection
+      POSTGRES_HOSTNAME: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DATABASE: guacamole_db
+      POSTGRES_USERNAME: guacamole_user
+      POSTGRES_PASSWORD: guacamole_password
+    networks:
+      - guacamole-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  guacamole-network:
+    driver: bridge
+
