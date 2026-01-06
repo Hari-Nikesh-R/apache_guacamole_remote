@@ -223,42 +223,347 @@ http://YOUR_SERVER_IP:8443/guacamole
 
 ## Adding Remote Connections
 
-After logging in, you can add remote desktop connections:
+After logging in, you can add remote desktop connections to access remote computers through your browser.
+
+### Prerequisites for Remote Connections
+
+Before creating a connection, ensure you have the following:
+
+#### For RDP Connections:
+1. **Remote Computer Requirements:**
+   - The remote computer must be powered on and accessible on the network
+   - **Windows**: Remote Desktop must be enabled (Settings → System → Remote Desktop)
+   - **Linux**: An RDP server must be installed and running (e.g., xrdp)
+
+2. **Network Connectivity:**
+   - The Guacamole server must be able to reach the remote computer
+   - Test connectivity: `ping <remote-ip-address>` from the Guacamole server
+   - Firewall must allow connections on the RDP port (default: 3389)
+
+3. **Authentication Credentials:**
+   - Valid username and password for the remote computer
+   - For domain accounts: Domain name and credentials
+   - For local accounts: Local username and password
+
+#### For VNC Connections:
+1. VNC server must be installed and running on the remote computer
+2. VNC password must be configured
+3. Network access to VNC port (default: 5900)
+
+#### For SSH Connections:
+1. SSH server must be running on the remote computer
+2. SSH access credentials (username/password or SSH key)
+3. Network access to SSH port (default: 22)
 
 ### Adding an RDP Connection
 
-1. Click **Settings** (gear icon) in the top menu
-2. Click **Connections** in the left sidebar
-3. Click **New Connection**
-4. Fill in the connection details:
-   - **Name**: A friendly name for the connection
-   - **Protocol**: Select "RDP"
-   - **Network**: Enter the hostname or IP address
-   - **Port**: 3389 (default RDP port)
-   - **Username**: Remote desktop username
-   - **Password**: Remote desktop password (or leave blank to prompt)
-5. Click **Save**
+RDP (Remote Desktop Protocol) allows you to access Windows or Linux remote desktops through your browser. Guacamole acts as a gateway, so you don't need an RDP client installed.
+
+#### Step-by-Step Guide:
+
+**Step 1: Access Guacamole Settings**
+1. Log in to Guacamole at `http://localhost:8443/guacamole`
+2. Click the **Settings** icon (⚙️) in the top-right corner, or click your username → **Settings**
+
+**Step 2: Navigate to Connections**
+1. In the left sidebar, click **Connections**
+2. You'll see a list of existing connections (if any)
+
+**Step 3: Create a New Connection**
+1. Click **New Connection** button (usually in the top-right or within the connections list)
+2. The connection editor will open
+
+**Step 4: Fill in Basic Connection Details**
+
+In the **General** tab:
+- **Name**: Enter a friendly name (e.g., "My Windows PC", "Production Server")
+- **Parent Connection Group**: Leave as "ROOT" (or select a group if you've created one)
+- **Protocol**: Select **"RDP"** from the dropdown menu
+
+**Step 5: Configure Network Settings**
+
+In the **Network** section:
+- **Network Address**: Enter the IP address or hostname of the remote computer
+  - Examples: `192.168.1.100`, `server.example.com`, `10.0.0.50`
+- **Port**: Enter `3389` (default RDP port) or your custom RDP port
+
+**Step 6: Configure Authentication**
+
+In the **Authentication** section:
+- **Username**: Enter the remote computer username
+  - Examples: `Administrator`, `john.doe`, `DOMAIN\username` (for domain accounts)
+- **Password**: Enter the password (optional - leave blank to be prompted each time)
+- **Domain**: If using a Windows domain, enter the domain name (e.g., `MYDOMAIN`)
+
+**Step 7: Configure Display Settings (Optional)**
+
+In the **Display** section:
+- **Color Depth**: Choose 8-bit, 16-bit, 24-bit, or 32-bit (24-bit or 32-bit recommended)
+- **Width**: Screen width in pixels (e.g., `1920`)
+- **Height**: Screen height in pixels (e.g., `1080`)
+- **DPI**: Dots per inch (e.g., `96`)
+
+**Step 8: Additional Settings (Optional)**
+
+- **Security**: Choose security mode (RDP, Negotiate, TLS, etc.)
+- **Enable Audio**: Check if you want audio redirection
+- **Enable Printing**: Check if you want printer redirection
+- **Enable Drive**: Check if you want drive redirection (for file transfer)
+
+**Step 9: Save the Connection**
+1. Click **Save** button (usually at the bottom-right)
+2. The connection will now appear in your connections list
+
+#### Using the Connection
+
+**Method 1: From Home Screen**
+1. After logging in, you'll see your connections on the home screen
+2. Simply click on the connection name
+3. If password wasn't saved, enter it when prompted
+4. The remote desktop will open in your browser
+
+**Method 2: From Connections List**
+1. Go to **Settings** → **Connections**
+2. Click on the connection name or the play icon (▶️)
+3. The remote desktop will open
+
+#### Example: Complete RDP Connection Setup
+
+Here's a complete example for connecting to a Windows 10 computer:
+
+```
+Name: Windows 10 Desktop
+Protocol: RDP
+Network Address: 192.168.1.100
+Port: 3389
+Username: Administrator
+Password: [your password]
+Domain: [leave blank if not using domain]
+Color Depth: 32-bit
+Width: 1920
+Height: 1080
+Security: Negotiate
+Enable Audio: ✓ (checked)
+Enable Printing: ✓ (checked)
+```
+
+#### RDP Connection Troubleshooting
+
+**Connection fails immediately:**
+- Verify the remote computer is powered on and accessible:
+  ```bash
+  ping 192.168.1.100
+  ```
+- Check if Remote Desktop is enabled on the remote computer
+- Verify firewall rules allow port 3389
+- Confirm the IP address or hostname is correct
+
+**"Cannot connect to guacd" error:**
+- Check if guacd container is running:
+  ```bash
+  docker compose ps guacd
+  ```
+- Check guacd logs:
+  ```bash
+  docker compose logs guacd
+  ```
+
+**"Authentication failed" error:**
+- Verify username and password are correct
+- Check if the account is locked or disabled
+- For domain accounts, ensure you include the domain: `DOMAIN\username`
+
+**Connection is slow or laggy:**
+- Reduce color depth (e.g., 16-bit instead of 32-bit)
+- Lower the resolution
+- Check network latency between Guacamole server and remote computer
+- Disable audio/video redirection if not needed
+
+**Screen is blank or black:**
+- Ensure the remote computer is logged in (not at lock screen)
+- Try a different color depth setting
+- Verify the remote desktop service is running
+
+#### RDP Security Best Practices
+
+1. **Use Strong Passwords**: Always use complex passwords for remote accounts
+2. **Enable Network Level Authentication (NLA)**: If supported by the remote computer
+3. **Use TLS Security Mode**: When possible, use TLS for encrypted connections
+4. **Restrict Access**: Assign connections only to authorized users in Guacamole
+5. **Use VPN**: For remote access, use VPN instead of exposing RDP directly to the internet
+6. **Regular Updates**: Keep both Guacamole and remote systems updated
 
 ### Adding a VNC Connection
 
-1. Follow steps 1-3 above
-2. Set **Protocol** to "VNC"
-3. Enter connection details:
-   - **Network**: VNC server address
-   - **Port**: 5900 (default VNC port)
-   - **Password**: VNC password
-4. Click **Save**
+VNC (Virtual Network Computing) allows you to access remote desktops, typically on Linux or macOS systems.
+
+#### Step-by-Step Guide:
+
+**Step 1-3:** Follow the same steps as RDP (Access Settings → Connections → New Connection)
+
+**Step 4: Configure Connection Details**
+- **Name**: Enter a friendly name (e.g., "Linux Desktop", "Mac Mini")
+- **Protocol**: Select **"VNC"** from the dropdown
+
+**Step 5: Network Configuration**
+- **Network Address**: Enter the IP address or hostname of the VNC server
+- **Port**: Enter `5900` (default VNC port) or your custom port
+  - Note: Some VNC servers use port 5901, 5902, etc. for multiple displays
+
+**Step 6: Authentication**
+- **Password**: Enter the VNC password configured on the remote computer
+- **Username**: Usually not required for VNC (leave blank unless your VNC server requires it)
+
+**Step 7: Display Settings (Optional)**
+- **Color Depth**: Choose appropriate color depth
+- **Width/Height**: Set desired resolution
+
+**Step 8: Save**
+- Click **Save** to create the connection
+
+#### VNC Connection Troubleshooting
+
+**Connection refused:**
+- Verify VNC server is running: `systemctl status vncserver` (Linux)
+- Check if VNC is listening on the correct port: `netstat -tuln | grep 5900`
+- Verify firewall allows VNC port
+
+**Authentication failed:**
+- Confirm the VNC password is correct
+- Check if VNC server requires username authentication
+- Verify VNC server configuration
+
+**Screen not displaying:**
+- Ensure a desktop session is active on the remote computer
+- Check if VNC server is configured for the correct display
 
 ### Adding an SSH Connection
 
-1. Follow steps 1-3 above
-2. Set **Protocol** to "SSH"
-3. Enter connection details:
-   - **Network**: SSH server address
-   - **Port**: 22 (default SSH port)
-   - **Username**: SSH username
-   - **Private Key**: Paste your SSH private key (optional)
-4. Click **Save**
+SSH (Secure Shell) allows you to access remote command-line terminals through your browser.
+
+#### Step-by-Step Guide:
+
+**Step 1-3:** Follow the same steps as RDP (Access Settings → Connections → New Connection)
+
+**Step 4: Configure Connection Details**
+- **Name**: Enter a friendly name (e.g., "Web Server", "Database Server")
+- **Protocol**: Select **"SSH"** from the dropdown
+
+**Step 5: Network Configuration**
+- **Network Address**: Enter the IP address or hostname of the SSH server
+- **Port**: Enter `22` (default SSH port) or your custom SSH port
+
+**Step 6: Authentication**
+
+You can use either password or SSH key authentication:
+
+**Option A: Password Authentication**
+- **Username**: Enter the SSH username (e.g., `root`, `ubuntu`, `admin`)
+- **Password**: Enter the password (or leave blank to be prompted)
+
+**Option B: SSH Key Authentication (Recommended)**
+- **Username**: Enter the SSH username
+- **Private Key**: Paste your SSH private key content
+  - Usually found in `~/.ssh/id_rsa` or `~/.ssh/id_ed25519`
+  - Copy the entire key including `-----BEGIN` and `-----END` lines
+- **Passphrase**: If your private key is encrypted, enter the passphrase
+
+**Step 7: Terminal Settings (Optional)**
+- **Terminal Type**: Choose terminal type (usually `xterm-256color`)
+- **Color Scheme**: Select color scheme for the terminal
+- **Font Name/Size**: Configure terminal font
+
+**Step 8: Save**
+- Click **Save** to create the connection
+
+#### SSH Connection Troubleshooting
+
+**Connection timeout:**
+- Verify SSH server is running: `systemctl status ssh` or `systemctl status sshd`
+- Check if SSH port is open: `netstat -tuln | grep 22`
+- Verify firewall allows SSH connections
+- Test SSH connectivity: `ssh username@hostname` from command line
+
+**Authentication failed:**
+- Verify username and password are correct
+- For key authentication, ensure the public key is in `~/.ssh/authorized_keys` on the server
+- Check key permissions (should be 600 for private key)
+- Verify the private key format is correct (PEM format)
+
+**Host key verification:**
+- First connection may require accepting the host key
+- If issues persist, check SSH server logs: `/var/log/auth.log` (Linux)
+
+#### SSH Security Best Practices
+
+1. **Use SSH Keys**: Prefer SSH key authentication over passwords
+2. **Disable Root Login**: Configure SSH server to disallow root login
+3. **Change Default Port**: Use a non-standard SSH port (not 22) for additional security
+4. **Use Strong Keys**: Use ED25519 or RSA 4096-bit keys
+5. **Regular Key Rotation**: Periodically rotate SSH keys
+
+### General Connection Troubleshooting
+
+If you're experiencing issues with any type of connection, check the following:
+
+#### Verify Guacamole Services
+
+1. **Check all containers are running:**
+   ```bash
+   docker compose ps
+   ```
+   All services (postgres, guacd, guacamole) should show "Up"
+
+2. **Check Guacamole logs:**
+   ```bash
+   docker compose logs guacamole --tail=50
+   ```
+
+3. **Check guacd logs:**
+   ```bash
+   docker compose logs guacd --tail=50
+   ```
+
+#### Network Connectivity Issues
+
+1. **Test network connectivity from Guacamole server:**
+   ```bash
+   # Test if remote host is reachable
+   docker compose exec guacamole ping <remote-ip>
+   
+   # Test if port is open
+   docker compose exec guacamole nc -zv <remote-ip> <port>
+   ```
+
+2. **Verify firewall rules:**
+   - Ensure the remote computer's firewall allows connections
+   - Check if Guacamole server can reach the remote computer
+   - Verify port forwarding if using NAT
+
+#### Connection Performance Issues
+
+1. **Reduce connection quality:**
+   - Lower color depth
+   - Reduce resolution
+   - Disable audio/video redirection
+
+2. **Check network latency:**
+   ```bash
+   docker compose exec guacamole ping <remote-ip>
+   ```
+
+3. **Monitor resource usage:**
+   ```bash
+   docker stats
+   ```
+
+#### Common Error Messages
+
+- **"Connection refused"**: Remote service is not running or port is blocked
+- **"Authentication failed"**: Incorrect credentials or account issues
+- **"Cannot connect to guacd"**: guacd service is not running or unreachable
+- **"Connection timeout"**: Network connectivity issue or firewall blocking
+- **"Screen is blank"**: Display/desktop session issue on remote computer
 
 ## Managing the Docker Instance
 
